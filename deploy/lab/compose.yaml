@@ -1,0 +1,49 @@
+name: enterprise-backup-lab
+
+services:
+  catalog:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - catalog_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - backend
+
+  controlplane:
+    build:
+      context: ../..
+      dockerfile: deploy/lab/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      catalog:
+        condition: service_healthy
+    environment:
+      LISTEN_ADDR: ":8080"
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@catalog:5432/${POSTGRES_DB}?sslmode=disable
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      KOPIA_REPOSITORY_URL: ${KOPIA_REPOSITORY_URL:-https://192.168.56.107:51515}
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+      - frontend
+
+volumes:
+  catalog_data:
+
+networks:
+  backend:
+    internal: true
+  frontend: {}
+

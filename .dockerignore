@@ -1,0 +1,9 @@
+.git
+.env
+**/.env
+deploy/lab/.env
+deploy/media/.env
+*.log
+web/node_modules
+web/dist
+

@@ -1,0 +1,8 @@
+.env
+deploy/lab/.env
+deploy/media/.env
+*.log
+*.tmp
+web/node_modules/
+web/dist/
+

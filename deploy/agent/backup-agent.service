@@ -1,0 +1,16 @@
+[Unit]
+Description=Enterprise Backup Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/bin/backup-agent run --state-file /etc/backup-agent/state.json
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
